@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonicFreedom", "PhotonicFreedom\PhotonicFreedom.csproj", "{B8176255-3DF2-4112-A598-5CD0CF6E82D6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8176255-3DF2-4112-A598-5CD0CF6E82D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8176255-3DF2-4112-A598-5CD0CF6E82D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8176255-3DF2-4112-A598-5CD0CF6E82D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8176255-3DF2-4112-A598-5CD0CF6E82D6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BCF0D5D8-8E38-4B00-9C04-57E56323998F}
+	EndGlobalSection
+EndGlobal
