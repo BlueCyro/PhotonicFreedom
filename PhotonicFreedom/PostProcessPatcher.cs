@@ -30,12 +30,21 @@ namespace NeosModloaderMod
 
             private static string BlurPath = "Settings.PostProcessing.MotionBlurState";
             private static string AOPath = "Settings.PostProcessing.AmbientOcclusionState";
-            private static void ToggleBlurs(IChangeable c){
-                //Blatant copy of MotionBlurDisable because I haven't researched unity enough yet :)
-                PostProcessLayer[] postProcessLayers = Resources.FindObjectsOfTypeAll<PostProcessLayer>();
+            private static string BlurQualityPath = "Settings.PostProcessing.MotionBlurQuality";
+
+            private static MotionBlur[] GetBlurs(){
                 //For each post process layer, find the motion blur effect and save it to an array
-                MotionBlur[] motionBlurs = postProcessLayers.Select(x => x.defaultProfile.GetSetting<MotionBlur>()).ToArray();
+                return Resources.FindObjectsOfTypeAll<PostProcessLayer>().Select(x => x.defaultProfile.GetSetting<MotionBlur>()).ToArray();
+            }
+
+            private static AmplifyOcclusionEffect[] GetAOs(){
+                //For each post process layer, find the AO effect and save it to an array
+                return Resources.FindObjectsOfTypeAll<UnityEngine.Camera>().Select(x => x.GetComponent<AmplifyOcclusionEffect>()).ToArray();
+            }
+
+            private static void ToggleBlurs(IChangeable c){
                 //For each motion blur effect, invert the enabled value
+                MotionBlur[] motionBlurs = GetBlurs();
                 foreach (MotionBlur motionBlur in motionBlurs)
                 {
                     motionBlur.enabled.value = Settings.ReadValue(BlurPath, false);
@@ -46,21 +55,23 @@ namespace NeosModloaderMod
             
             private static void ToggleAO(IChangeable c){
                 //Find all cameras in the unity scene
-                UnityEngine.Camera[] cameras = Resources.FindObjectsOfTypeAll<UnityEngine.Camera>();
+                AmplifyOcclusionEffect[] AOs = GetAOs();
                 //For each camera, find the AmplifyOcclusionEffect
-                foreach (UnityEngine.Camera camera in cameras)
+                foreach (var AO in AOs)
                 {
-                    var ao = camera.GetComponent<AmplifyOcclusionEffect>();
-                    //If the camera has the AmplifyOcclusionEffect, invert the enabled value
-                    try
-                    {
-                        ao.enabled = Settings.ReadValue(AOPath, false);
-                    }
-                    catch(Exception e){
-                        UniLog.Log(e.Message);
-                    }
+                    AO.enabled = Settings.ReadValue(AOPath, false);
                 }
 
+            }
+
+            private static void ChangeBlurQuality(IChangeable c){
+                //Find all motion blur effects
+                MotionBlur[] motionBlurs = GetBlurs();
+                //For each motion blur effect, set the quality to the value of the slider
+                foreach (MotionBlur motionBlur in motionBlurs)
+                {
+                    motionBlur.sampleCount.value = Settings.ReadValue(BlurQualityPath, 0);
+                }
             }
 
             static void Postfix(SettingsDialog __instance){
@@ -82,7 +93,16 @@ namespace NeosModloaderMod
 
                 //Create checkboxes for the blur and AO settings
                 var BlurCheckBox = Builder.Checkbox("Enable Motion Blur", false, true, 4f);
+                var BlurQualityText = Builder.HorizontalElementWithLabel<IntTextEditorParser>("Motion Blur Quality", 0.7f, () => Builder.IntegerField(0, 100, 1, true));
+                var BlurQualitySlider = Builder.Slider<int>(Builder.Style.MinHeight, 10, 0, 100, true);
                 var AOCheckBox = Builder.Checkbox("Enable Ambient Occlusion", false, true, 4f);                
+                
+                //Add a settingsync for the blur quality and listen for changes
+                var BlurQualitySync = BlurQualityText.ParsedValue.SyncWithSetting(BlurQualityPath, SettingSync.LocalChange.UpdateSetting);
+                BlurQualitySlider.Value.SyncWithSetting(BlurQualityPath, SettingSync.LocalChange.UpdateSetting);
+
+                BlurQualitySync.Changed += ChangeBlurQuality;
+
 
                 //Add a settingsync for both checkboxes and subsequently set up listeners to see if they've changed.
                 var BlurSync = BlurCheckBox.State.SyncWithSetting(BlurPath, SettingSync.LocalChange.UpdateSetting);
