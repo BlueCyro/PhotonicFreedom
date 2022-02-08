@@ -31,7 +31,7 @@ namespace NeosModloaderMod
             private static string BlurPath = "Settings.PostProcessing.MotionBlurState";
             private static string AOPath = "Settings.PostProcessing.AmbientOcclusionState";
             private static void ToggleBlurs(IChangeable c){
-                //Blatant copy of MotionBlurDisable because I haven't research unity enough yet :)
+                //Blatant copy of MotionBlurDisable because I haven't researched unity enough yet :)
                 PostProcessLayer[] postProcessLayers = Resources.FindObjectsOfTypeAll<PostProcessLayer>();
                 //For each post process layer, find the motion blur effect and save it to an array
                 MotionBlur[] motionBlurs = postProcessLayers.Select(x => x.defaultProfile.GetSetting<MotionBlur>()).ToArray();
