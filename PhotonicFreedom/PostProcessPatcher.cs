@@ -41,8 +41,6 @@ namespace NeosModloaderMod
 
         }
 
-
-
         [HarmonyPatch(typeof(SettingsDialog), "OnAttach")]
         class SettingsPatcher
         {

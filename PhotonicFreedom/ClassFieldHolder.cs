@@ -14,10 +14,5 @@ namespace PhotonicFreedom
 
         public Dictionary<string, string> fields { get; set; }
 
-        public static void Test()
-        {
-            
-        }
-
     }
 }
