@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
+using System.Reflection;
+using PhotonicFreedom;
+using System.Threading.Tasks;
 
 namespace NeosModloaderMod
 {
@@ -17,6 +20,7 @@ namespace NeosModloaderMod
         public override string Name => "Photonic Freedom";
         public override string Version => "1.0.1";
 
+        public static string BaseSettingPath => "Settings.PostProcessing.";
         public override void OnEngineInit()
         {
             Harmony harmony = new Harmony("net.cyro.PhotonicFreedom");
@@ -24,57 +28,60 @@ namespace NeosModloaderMod
 
         }
 
+        [HarmonyPatch(typeof(DevToolTip), "GenerateMenuItems")]
+        class DevPatcher{
+            //Postfix that adds a new menu item
+
+            private static void FindBlooms(IButton b, ButtonEventData d){
+                //Find all of the Bloom post processing effects in the unity scene
+                List<Bloom> blooms = new List<Bloom>();
+                foreach (Bloom bb in GameObject.FindObjectsOfType<Bloom>())
+                {
+                    blooms.Add(bb);
+                }
+                //Find all of the fields in one of the bloom effects
+                FieldInfo[] fields = blooms[0].GetType().GetFields();
+                //Make a string array
+                string[] fieldNames = new string[fields.Length];
+                for(int i = 0; i < fields.Length; i++){
+                    fieldNames[i] = String.Format("{0} is of type: {1}", fields[i].Name, fields[i].FieldType);
+                }
+                //Join the string and separate them with a new line
+                string joined = String.Join("\n", fieldNames);
+                b.World.Debug.Text(joined, 1f, 10f);
+            }
+            public static void Postfix(CommonTool tool, FrooxEngine.ContextMenu menu){
+                var BloomButton = menu.AddItem("Find Blooms", NeosAssets.Graphics.Icons.Item.MultiSelect, color.Pink, null);
+                BloomButton.Button.LocalPressed += FindBlooms;
+            }
+        }
+
+        [HarmonyPatch(typeof(Userspace), "FinishCloudSettingsLoad")]
+        class SettingComponentPatcher
+        {
+            
+            [HarmonyPostfix]
+            public static void LoadAuxSettings()
+            {
+                UniLog.Log("Loading Aux Settings");
+                SettingsHelper.InstantiateSettings(false, false, true);
+            }
+
+        }
+
+
 
         [HarmonyPatch(typeof(SettingsDialog), "OnAttach")]
-        class SettingsPatcher{
-
-            private static string BlurPath = "Settings.PostProcessing.MotionBlurState";
-            private static string AOPath = "Settings.PostProcessing.AmbientOcclusionState";
-            private static string BlurQualityPath = "Settings.PostProcessing.MotionBlurQuality";
-
-            private static MotionBlur[] GetBlurs(){
-                //For each post process layer, find the motion blur effect and save it to an array
-                return Resources.FindObjectsOfTypeAll<PostProcessLayer>().Select(x => x.defaultProfile.GetSetting<MotionBlur>()).ToArray();
+        class SettingsPatcher
+        {
+            static void ChangedCallback(FieldInfo f, object val, Type t)
+            {
+                SettingsHelper.SetValueToAllFields(f, GameObject.FindObjectsOfType(t), val);
+                SettingsHelper.UpdateSettings(f.DeclaringType.Name, f.Name, val.ToString());
             }
 
-            private static AmplifyOcclusionEffect[] GetAOs(){
-                //For each post process layer, find the AO effect and save it to an array
-                return Resources.FindObjectsOfTypeAll<UnityEngine.Camera>().Select(x => x.GetComponent<AmplifyOcclusionEffect>()).ToArray();
-            }
-
-            private static void ToggleBlurs(IChangeable c){
-                //For each motion blur effect, invert the enabled value
-                MotionBlur[] motionBlurs = GetBlurs();
-                foreach (MotionBlur motionBlur in motionBlurs)
-                {
-                    motionBlur.enabled.value = Settings.ReadValue(BlurPath, false);
-                }
-                
-            }
-
-            
-            private static void ToggleAO(IChangeable c){
-                //Find all cameras in the unity scene
-                AmplifyOcclusionEffect[] AOs = GetAOs();
-                //For each camera, find the AmplifyOcclusionEffect
-                foreach (var AO in AOs)
-                {
-                    AO.enabled = Settings.ReadValue(AOPath, false);
-                }
-
-            }
-
-            private static void ChangeBlurQuality(IChangeable c){
-                //Find all motion blur effects
-                MotionBlur[] motionBlurs = GetBlurs();
-                //For each motion blur effect, set the quality to the value of the slider
-                foreach (MotionBlur motionBlur in motionBlurs)
-                {
-                    motionBlur.sampleCount.value = Settings.ReadValue(BlurQualityPath, 0);
-                }
-            }
-
-            static void Postfix(SettingsDialog __instance){
+            static void Postfix(SettingsDialog __instance)
+            {
                 
                 //Find the rect transform on the right side of the settings dialog
                 var RightRectSlot = __instance.Slot.FindChild(s => s.Name == "Right").FindChild(s => s.Name == "Content");
@@ -91,27 +98,56 @@ namespace NeosModloaderMod
                 Builder.Style.MinHeight = LayoutTemplate.MinHeight.Value;
                 Builder.Style.PreferredHeight = LayoutTemplate.PreferredHeight.Value;
 
-                //Create checkboxes for the blur and AO settings
-                var BlurCheckBox = Builder.Checkbox("Enable Motion Blur", false, true, 4f);
-                var BlurQualityText = Builder.HorizontalElementWithLabel<IntTextEditorParser>("Motion Blur Quality", 0.7f, () => Builder.IntegerField(0, 100, 1, true));
-                var BlurQualitySlider = Builder.Slider<int>(Builder.Style.MinHeight, 10, 0, 100, true);
-                var AOCheckBox = Builder.Checkbox("Enable Ambient Occlusion", false, true, 4f);                
+                Builder.Text("<b>Post Processing Settings</b>", true, null, true, null);
                 
-                //Add a settingsync for the blur quality and listen for changes
-                var BlurQualitySync = BlurQualityText.ParsedValue.SyncWithSetting(BlurQualityPath, SettingSync.LocalChange.UpdateSetting);
-                BlurQualitySlider.Value.SyncWithSetting(BlurQualityPath, SettingSync.LocalChange.UpdateSetting);
+                var settings = SettingsHelper.RetrieveClassSettings();
 
-                BlurQualitySync.Changed += ChangeBlurQuality;
+                foreach (var hold in settings)
+                {
+                    Type type = Type.GetType(hold.type);
 
+                    Builder.Text("<b>" + type.Name + " settings</b>", true, null, true, null);
 
-                //Add a settingsync for both checkboxes and subsequently set up listeners to see if they've changed.
-                var BlurSync = BlurCheckBox.State.SyncWithSetting(BlurPath, SettingSync.LocalChange.UpdateSetting);
-                var AOSync = AOCheckBox.State.SyncWithSetting(AOPath, SettingSync.LocalChange.UpdateSetting);
+                    foreach(KeyValuePair<string, string> p in hold.fields)
+                    {
+                        FieldInfo field = type.GetField(p.Key);
 
-                BlurSync.Changed += ToggleBlurs;
-                AOSync.Changed += ToggleAO;
+                        Type SanitizedType = SettingsHelper.FieldSanitizer(field.FieldType);
+                        object val = null;
+                        
+                        try
+                        {
+                            val = Convert.ToBoolean(p.Value);
+                        } 
+                        catch
+                        {
+                            val = Convert.ChangeType(p.Value, SanitizedType);
+                        }
+
+                        if(val.GetType() == typeof(int))
+                        {
+                            var parser = Builder.HorizontalElementWithLabel<IntTextEditorParser>(field.Name, 0.7f, () => Builder.IntegerField(int.MinValue, int.MaxValue, 1, true));
+                            parser.ParsedValue.Value = (int)val;
+
+                            parser.ParsedValue.Changed += (IChangeable c) => ChangedCallback(field, parser.ParsedValue.Value, type);
+                        }
+                        if(val.GetType() == typeof(float))
+                        {
+                            var parser = Builder.HorizontalElementWithLabel<FloatTextEditorParser>(field.Name, 0.7f, () => Builder.FloatField(float.MinValue, float.MaxValue, 2, null, true));
+                            parser.ParsedValue.Value = (float)val;
+
+                            parser.ParsedValue.Changed += (IChangeable c) => ChangedCallback(field, parser.ParsedValue.Value, type);
+                        }
+                        if(val.GetType() == typeof(bool))
+                        {
+                            var check = Builder.Checkbox(field.Name, (bool)val, true);
+
+                            check.Changed += (IChangeable c) => ChangedCallback(field, check.IsChecked, type);
+                        }
+                    }
+                }
+                
             }
         }
-
     }
 }
