@@ -28,34 +28,6 @@ namespace NeosModloaderMod
 
         }
 
-        [HarmonyPatch(typeof(DevToolTip), "GenerateMenuItems")]
-        class DevPatcher{
-            //Postfix that adds a new menu item
-
-            private static void FindBlooms(IButton b, ButtonEventData d){
-                //Find all of the Bloom post processing effects in the unity scene
-                List<Bloom> blooms = new List<Bloom>();
-                foreach (Bloom bb in GameObject.FindObjectsOfType<Bloom>())
-                {
-                    blooms.Add(bb);
-                }
-                //Find all of the fields in one of the bloom effects
-                FieldInfo[] fields = blooms[0].GetType().GetFields();
-                //Make a string array
-                string[] fieldNames = new string[fields.Length];
-                for(int i = 0; i < fields.Length; i++){
-                    fieldNames[i] = String.Format("{0} is of type: {1}", fields[i].Name, fields[i].FieldType);
-                }
-                //Join the string and separate them with a new line
-                string joined = String.Join("\n", fieldNames);
-                b.World.Debug.Text(joined, 1f, 10f);
-            }
-            public static void Postfix(CommonTool tool, FrooxEngine.ContextMenu menu){
-                var BloomButton = menu.AddItem("Find Blooms", NeosAssets.Graphics.Icons.Item.MultiSelect, color.Pink, null);
-                BloomButton.Button.LocalPressed += FindBlooms;
-            }
-        }
-
         [HarmonyPatch(typeof(Userspace), "FinishCloudSettingsLoad")]
         class SettingComponentPatcher
         {
