@@ -18,7 +18,7 @@ namespace NeosModloaderMod
     {
         public override string Author => "Cyro";
         public override string Name => "Photonic Freedom";
-        public override string Version => "1.0.1";
+        public override string Version => "1.2.0";
 
         public static string BaseSettingPath => "Settings.PostProcessing.";
         public override void OnEngineInit()
