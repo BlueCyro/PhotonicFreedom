@@ -36,7 +36,7 @@ namespace NeosModloaderMod
             public static void LoadAuxSettings()
             {
                 UniLog.Log("Loading Aux Settings");
-                SettingsHelper.InstantiateSettings(false, false, true);
+                SettingsHelper.InstantiateSettings(false, false);
             }
 
         }
@@ -47,7 +47,35 @@ namespace NeosModloaderMod
             static void ChangedCallback(FieldInfo f, object val, Type t)
             {
                 SettingsHelper.SetValueToAllFields(f, GameObject.FindObjectsOfType(t), val);
-                SettingsHelper.UpdateSettings(f.DeclaringType.Name, f.Name, val.ToString());
+                SettingsHelper.UpdateSettings(t.Name, f.Name, val.ToString());
+            }
+
+            static void UpdateSettingsMenuValues(Dictionary<Type, Dictionary<string,IField>> values)
+            {
+                foreach( var h in SettingsHelper.RetrieveClassSettings())
+                {
+                    foreach(var v in h.fields)
+                    {
+                        Type t = Type.GetType(h.type);
+                        if(values.ContainsKey(t))
+                        {
+                            if(values[t].ContainsKey(v.Key))
+                            {
+                                object val = null;
+                                try
+                                {
+                                    val = Convert.ToBoolean(v.Value);
+                                }
+                                catch
+                                {
+                                    val = Convert.ChangeType(v.Value, values[t][v.Key].ValueType);
+                                }
+
+                                values[t][v.Key].BoxedValue = val;
+                            }
+                        }
+                    }
+                }
             }
 
             static void Postfix(SettingsDialog __instance)
@@ -69,7 +97,19 @@ namespace NeosModloaderMod
                 Builder.Style.PreferredHeight = LayoutTemplate.PreferredHeight.Value;
 
                 Builder.Text("<b>Post Processing Settings</b>", true, null, true, null);
+
+                var Fields = new Dictionary<Type, Dictionary<string, IField>>();
                 
+                Button ResetButton = Builder.Button("Reset all settings");
+                
+                ResetButton.LocalPressed += (IButton b, ButtonEventData d) => 
+                {
+                    UniLog.Log("Resetting all settings");
+                    SettingsHelper.InstantiateSettings(true, false);
+                    UpdateSettingsMenuValues(Fields);
+
+                };
+
                 var settings = SettingsHelper.RetrieveClassSettings();
 
                 foreach (var hold in settings)
@@ -77,6 +117,8 @@ namespace NeosModloaderMod
                     Type type = Type.GetType(hold.type);
 
                     Builder.Text("<b>" + type.Name + " settings</b>", true, null, true, null);
+
+                    Fields.Add(type, new Dictionary<string, IField>());
 
                     foreach(KeyValuePair<string, string> p in hold.fields)
                     {
@@ -98,6 +140,7 @@ namespace NeosModloaderMod
                         {
                             var parser = Builder.HorizontalElementWithLabel<IntTextEditorParser>(field.Name, 0.7f, () => Builder.IntegerField(int.MinValue, int.MaxValue, 1, true));
                             parser.ParsedValue.Value = (int)val;
+                            Fields[type].Add(field.Name, parser.ParsedValue);
 
                             parser.ParsedValue.Changed += (IChangeable c) => ChangedCallback(field, parser.ParsedValue.Value, type);
                         }
@@ -105,12 +148,14 @@ namespace NeosModloaderMod
                         {
                             var parser = Builder.HorizontalElementWithLabel<FloatTextEditorParser>(field.Name, 0.7f, () => Builder.FloatField(float.MinValue, float.MaxValue, 2, null, true));
                             parser.ParsedValue.Value = (float)val;
+                            Fields[type].Add(field.Name, parser.ParsedValue);
 
                             parser.ParsedValue.Changed += (IChangeable c) => ChangedCallback(field, parser.ParsedValue.Value, type);
                         }
                         if(val.GetType() == typeof(bool))
                         {
                             var check = Builder.Checkbox(field.Name, (bool)val, true);
+                            Fields[type].Add(field.Name, check.State);
 
                             check.Changed += (IChangeable c) => ChangedCallback(field, check.IsChecked, type);
                         }

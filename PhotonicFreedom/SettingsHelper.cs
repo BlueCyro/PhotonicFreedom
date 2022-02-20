@@ -99,7 +99,7 @@ namespace PhotonicFreedom
             }
         }
 
-        public static void InstantiateSettings(bool ResetAll = false, bool WriteDefaults = true, bool UpdateDefaults = false)
+        public static void InstantiateSettings(bool ResetAll = false, bool UpdateDefaults = false)
         {
             //If the settings directory isn't there, create it
             if (!Directory.Exists(DefaultFilePath))
@@ -133,6 +133,18 @@ namespace PhotonicFreedom
                 }
             }
 
+            //If ResetAll is true, delete all of the settings files and replace them with the defaults
+            if (ResetAll)
+            {
+                foreach (string file in Directory.GetFiles(DefaultFilePath, "*.json"))
+                {
+                    File.Delete(file);
+                }
+                foreach (string file in Directory.GetFiles(DefaultFilePath + "Defaults/", "*.json"))
+                {
+                    File.Copy(file, DefaultFilePath + Path.GetFileName(file));
+                }
+            }
 
             foreach(ClassFieldHolder hold in RetrieveClassSettings())
             {
@@ -172,12 +184,6 @@ namespace PhotonicFreedom
                 }
                 
             }
-
-            /*
-            RetrieveProperties().ForEach(x => {
-                UniLog.Log(x.GetFirst().ReflectedType.Name + ":\n");
-                x.ToList().ForEach(y => UniLog.Log(y.Name + " is of type: " + y.PropertyType));
-            });*/
         }
 
         public static Type FieldSanitizer(Type t)
@@ -213,11 +219,9 @@ namespace PhotonicFreedom
             if (isValue)
             {
                 field.SetValue(obj, value);
-                UniLog.Log("Set " + field.Name + " to " + value + "\n");
             }
             else if (type.GetField("value") != null)
             {
-                UniLog.Log("Setting value of " + field.Name + " to " + value);
                 AccessTools.Field(type, "value").SetValue(field.GetValue(obj), Convert.ChangeType(value, type.GetField("value").FieldType));
             }
         }
@@ -232,7 +236,6 @@ namespace PhotonicFreedom
 
         public static object GetValueFromField(FieldInfo field, object obj)
         {
-            UniLog.Log(field.Name + " is of type: " + field.FieldType);
             object val = null;
             Type type = field.FieldType;
             bool isValue = type.IsValueType;
@@ -240,18 +243,15 @@ namespace PhotonicFreedom
             if (isValue)
             {
                 val = field.GetValue(obj);
-                UniLog.Log(val);
                 return val;
             }
             else if (type.GetField("value") != null)
             {
                 val = AccessTools.Field(type, "value").GetValue(field.GetValue(obj));
-                UniLog.Log(val == null ? "NULL" : val);
                 return val;
             }
             else
             {
-                UniLog.Log("No value found");
                 val = null;
                 return val;
             }
