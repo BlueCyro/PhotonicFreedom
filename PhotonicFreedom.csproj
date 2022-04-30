@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net4.7.2</TargetFramework>
+    <RootNamespace>PhotonicFreedom</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <AssemblyName>PhotonicFreedom</AssemblyName>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>SymlinkedLibraries\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="BaseX">
+      <HintPath>SymlinkedLibraries\BaseX.dll</HintPath>
+    </Reference>
+    <Reference Include="CodeX">
+      <HintPath>SymlinkedLibraries\CodeX.dll</HintPath>
+    </Reference>
+    <Reference Include="FrooxEngine">
+      <HintPath>SymlinkedLibraries\FrooxEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="NeosModLoader">
+      <HintPath>SymlinkedLibraries\NeosModLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>SymlinkedLibraries\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>SymlinkedLibraries\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.PostProcessing.Runtime">
+      <HintPath>SymlinkedLibraries\Unity.PostProcessing.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Rendering">
+      <HintPath>SymlinkedLibraries\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityNeos">
+      <HintPath>SymlinkedLibraries\UnityNeos.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.Json" Version="6.0.3" />
+  </ItemGroup>
+  
+</Project>
