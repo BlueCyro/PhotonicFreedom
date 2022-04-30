@@ -43,3 +43,5 @@ Enjoy!
 <b>--------------------------------------------------------------------</b>
 
 <b>P.S. Presets will be added in the future</b>
+
+<sub><sub>Related functionalities and features potentially coming to cameras near you</sub></sub>
