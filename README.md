@@ -4,7 +4,7 @@
 
 
 # DISCLAIMER:
-<b><i>This mod lets you change the intended look of neos. Some worlds are built neos' defaults in mind so if things look bad - it's YOUR fault!</b></i>
+<b><i>This mod lets you change the intended look of neos. Some worlds are built with neos' defaults in mind so if things look bad - it's YOUR fault!</b></i>
 
 # Settings you can change:
 
