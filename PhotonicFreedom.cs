@@ -63,22 +63,24 @@ public class PhotonicFreedom : NeosMod
         ClassFieldHolder c = new ClassFieldHolder(type, comp);
         ClassSerializer serializer = new ClassSerializer(type);
         FieldHolders[type] = c;
-        c.Fields.ToList().ForEach(field => {
+        foreach (var field in c.Fields)
+        {
             Debug($"PhotonicFreedom: Found field -> {field.Name} with value {field.DefaultValue}\n");
             if (SupportedTypes.Contains(field.RealType) || field.RealType.IsEnum)
             {
                 Type pairType = typeof(FieldValuePair<>).MakeGenericType(field.RealType);
                 serializer.defaultFieldValues.Add((IFieldValuePair)Activator.CreateInstance(pairType, new object[] { field.Name, field.DefaultValue }));
             }
-        });
-        c.Properties.ToList().ForEach(property => {
-        Debug($"PhotonicFreedom: Found property -> {property.Name} with value {property.DefaultValue}\n");
+        }
+        foreach (var property in c.Properties)
+        {
+            Debug($"PhotonicFreedom: Found property -> {property.Name} with value {property.DefaultValue}\n");
             if (SupportedTypes.Contains(property.BasePropertyType) || property.BasePropertyType.IsEnum)
             {
                 Type pairType = typeof(FieldValuePair<>).MakeGenericType(property.BasePropertyType);
                 serializer.defaultFieldValues.Add((IFieldValuePair)Activator.CreateInstance(pairType, new object[] { property.Name, property.DefaultValue }));
             }
-        });
+        }
         if (!Directory.Exists("nml_mods/Photonic_Settings"))
         {
             Directory.CreateDirectory("nml_mods/Photonic_Settings");
@@ -94,22 +96,24 @@ public class PhotonicFreedom : NeosMod
         ClassFieldHolder c = new ClassFieldHolder(type, comp);
         ClassSerializer serializer = new ClassSerializer(type);
         FieldHolders[type] = c;
-        c.Fields.ToList().ForEach(field => {
+        foreach (var field in c.Fields)
+        {
             //Debug($"PhotonicFreedom: Found field -> {field.Name} with value {field.DefaultValue}\n")
             if (SupportedTypes.Contains(field.RealType) || field.RealType.IsEnum)
             {
                 Type pairType = typeof(FieldValuePair<>).MakeGenericType(field.RealType);
                 serializer.defaultFieldValues.Add((IFieldValuePair)Activator.CreateInstance(pairType, new object[] { field.Name, field.GetValue(comp) }));
             }
-        });
-        c.Properties.ToList().ForEach(property => {
+        }
+        foreach (var property in c.Properties)
+        {
             //Debug($"PhotonicFreedom: Found property -> {property.Name} with value {property.GetValue(comp)}\n")
             if (SupportedTypes.Contains(property.BasePropertyType) || property.BasePropertyType.IsEnum)
             {
                 Type pairType = typeof(FieldValuePair<>).MakeGenericType(property.BasePropertyType);
                 serializer.defaultFieldValues.Add((IFieldValuePair)Activator.CreateInstance(pairType, new object[] { property.Name, property.GetValue(comp) }));
             }
-        });
+        }
         if (!Directory.Exists("nml_mods/Photonic_Settings"))
         {
             Directory.CreateDirectory("nml_mods/Photonic_Settings");
@@ -124,15 +128,17 @@ public class PhotonicFreedom : NeosMod
     {
         ClassSerializer loaded = JsonConvert.DeserializeObject<ClassSerializer>(File.ReadAllText($"nml_mods/Photonic_Settings/{type.Name}.json"), serializerSettings);
         Debug("PhotonicFreedom: Loaded settings has " + loaded.defaultFieldValues + "\n");
-        FieldHolders[type].Fields.ToList().ForEach(field => {
+        foreach (var field in FieldHolders[type].Fields)
+        {
             IFieldValuePair pair = loaded.defaultFieldValues.FirstOrDefault(pair => pair.fieldName == field.Name);
             if (pair != null && pair.BoxedValue != null)
             {
                 Debug($"PhotonicFreedom: Found field -> {field.Name} with value {pair.BoxedValue} and a type of {pair.BoxedValue.GetType()}\n");
                 field.SetRealValue(comp, pair.BoxedValue);
             }
-        });
-        FieldHolders[type].Properties.ToList().ForEach(property => {
+        }
+        foreach (var property in FieldHolders[type].Properties)
+        {
             IFieldValuePair pair = loaded.defaultFieldValues.FirstOrDefault(pair => pair.fieldName == property.Name);
             if (pair != null && pair.BoxedValue != null)
             {
@@ -140,7 +146,7 @@ public class PhotonicFreedom : NeosMod
                 Debug("PhotonicFreedom: Setting property " + property.Name + " to " + pair.BoxedValue + "\n");
                 property.SetRealValue(comp, pair.BoxedValue);
             }
-        });
+        }
     }
     public override void OnEngineInit()
     {
@@ -204,7 +210,8 @@ public class PhotonicFreedom : NeosMod
         
         builder.Text("---------------------------------------------", true, null, true, null);
         
-        Types.ToList().ForEach(type => {
+        foreach (var type in Types)
+        {
             ClassFieldHolder holder = FieldHolders[type];
             object comp = type.InheritsFrom(typeof(PostProcessEffectSettings)) ? layer.GetBundle(type).settings : mainCam.GetComponent(type) ?? Activator.CreateInstance(type);
 
@@ -238,7 +245,8 @@ public class PhotonicFreedom : NeosMod
             };
             builder.Text("---------------------------------------------", true, null, true, null);
             
-            holder.Fields.ToList().ForEach(field => {
+            foreach (var field in holder.Fields)
+            {
                 if (field.RealType == typeof(int))
                 {
                     var parser = builder.HorizontalElementWithLabel<IntTextEditorParser>(field.PrettifiedName, 0.7f, () => builder.IntegerField((int)field.Min, (int)field.Max, 1));
@@ -328,8 +336,9 @@ public class PhotonicFreedom : NeosMod
                 {
                     builder.Text("<size=25%>" + field.Tooltip + "</size>", false, Alignment.TopLeft, true, null).Slot.GetComponent<LayoutElement>().Priority.Value = 0;
                 }
-            });
-            holder.Properties.ToList().ForEach(property => {
+            }
+            foreach (var property in holder.Properties)
+            {
                 if (property.BasePropertyType == typeof(bool) && property.Name == "enabled")
                 {
                     var checkbox = builder.Checkbox(property.PrettifiedName, (bool)property.GetValue(comp!));
@@ -343,8 +352,8 @@ public class PhotonicFreedom : NeosMod
                         SettingFields.Add(type, new Dictionary<string, IField>() { { property.Name, checkbox.State } });
                     }
                 }
-            });
-        });
+            }
+        }
     }
 
     [HarmonyPatch]
