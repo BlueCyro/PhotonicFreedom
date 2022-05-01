@@ -216,6 +216,50 @@ public class PhotonicFreedom : NeosMod
             object comp = type.InheritsFrom(typeof(PostProcessEffectSettings)) ? layer.GetBundle(type).settings : mainCam.GetComponent(type) ?? Activator.CreateInstance(type);
 
             builder.Text("<b>" + type.Name + "</b>", true, null, true, null);
+
+            foreach (var property in holder.Properties)
+            {
+                if (property.BasePropertyType == typeof(bool) && property.Name == "enabled")
+                {
+                    builder.Panel();
+                    var list = builder.SplitHorizontally(new float[] { 0.42f, 0.58f });
+                    builder.NestInto(list[1]);
+                    var checkbox = builder.Checkbox(property.PrettifiedName, (bool)property.GetValue(comp!), false);
+                    builder.NestOut();
+                    builder.NestOut();
+                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, property, comp!);
+                    if (SettingFields.ContainsKey(type))
+                    {
+                        SettingFields[type].Add(property.Name, checkbox.State);
+                    }
+                    else
+                    {
+                        SettingFields.Add(type, new Dictionary<string, IField>() { { property.Name, checkbox.State } });
+                    }
+                }
+            }
+            foreach (var field in holder.Fields)
+            {
+                if (field.RealType == typeof(bool) && field.Name == "enabled")
+                {
+                    builder.Panel();
+                    var list = builder.SplitHorizontally(new float[] { 0.42f, 0.58f });
+                    builder.NestInto(list[1]);
+                    var checkbox = builder.Checkbox(field.PrettifiedName, (bool)field.GetValue(comp!), false);
+                    builder.NestOut();
+                    builder.NestOut();
+                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
+                    if (SettingFields.ContainsKey(type))
+                    {
+                        SettingFields[type].Add(field.Name, checkbox.State);
+                    }
+                    else
+                    {
+                        SettingFields.Add(type, new Dictionary<string, IField>() { { field.Name, checkbox.State } });
+                    }
+                }
+            }
+            builder.Text("---------------------------------------------", true, null, true, null);
             Button IndividualComponentResetButton = builder.Button("Reset");
             IndividualComponentResetButton.LocalPressed += (IButton b, ButtonEventData d) => {
                 foreach (KeyValuePair<string, IField> kvp in SettingFields[type])
@@ -244,7 +288,6 @@ public class PhotonicFreedom : NeosMod
                 }
             };
             builder.Text("---------------------------------------------", true, null, true, null);
-            
             foreach (var field in holder.Fields)
             {
                 if (field.RealType == typeof(int))
@@ -279,7 +322,7 @@ public class PhotonicFreedom : NeosMod
                         SettingFields.Add(type, new Dictionary<string, IField>() { { field.Name, parser.ParsedValue } });
                     }
                 }
-                if (field.RealType == typeof(bool) && field.Name != "active")
+                if (field.RealType == typeof(bool) && field.Name != "active" && field.Name != "enabled")
                 {
                     var checkbox = builder.Checkbox(field.PrettifiedName, (bool)field.GetValue(comp!));
                     checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
@@ -335,22 +378,6 @@ public class PhotonicFreedom : NeosMod
                 if (field.Tooltip != null && field.Tooltip.Length > 0 && SupportedTypes.Contains(field.RealType))
                 {
                     builder.Text("<size=25%>" + field.Tooltip + "</size>", false, Alignment.TopLeft, true, null).Slot.GetComponent<LayoutElement>().Priority.Value = 0;
-                }
-            }
-            foreach (var property in holder.Properties)
-            {
-                if (property.BasePropertyType == typeof(bool) && property.Name == "enabled")
-                {
-                    var checkbox = builder.Checkbox(property.PrettifiedName, (bool)property.GetValue(comp!));
-                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, property, comp!);
-                    if (SettingFields.ContainsKey(type))
-                    {
-                        SettingFields[type].Add(property.Name, checkbox.State);
-                    }
-                    else
-                    {
-                        SettingFields.Add(type, new Dictionary<string, IField>() { { property.Name, checkbox.State } });
-                    }
                 }
             }
         }
