@@ -20,7 +20,7 @@ public class PhotonicFreedom : NeosMod
 {
     public override string Author => "Cyro";
     public override string Name => "PhotonicFreedom";
-    public override string Version => "2.0.0";
+    public override string Version => "2.1.0";
     public static string DynvarKey => "World/PhotonicFreedomPostProcessOption";
     private static List<Type> TypeList = new List<Type>() { typeof(AmplifyOcclusionBase) };
     public static List<Type> Types
