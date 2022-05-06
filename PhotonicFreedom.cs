@@ -21,6 +21,7 @@ public class PhotonicFreedom : NeosMod
     public override string Author => "Cyro";
     public override string Name => "PhotonicFreedom";
     public override string Version => "2.0.0";
+    public static string DynvarKey => "World/PhotonicFreedomPostProcessOption";
     private static List<Type> TypeList = new List<Type>() { typeof(AmplifyOcclusionBase) };
     public static List<Type> Types
     {
@@ -127,24 +128,74 @@ public class PhotonicFreedom : NeosMod
     public static void ReadAllSettings(Type type, object comp)
     {
         ClassSerializer loaded = JsonConvert.DeserializeObject<ClassSerializer>(File.ReadAllText($"nml_mods/Photonic_Settings/{type.Name}.json"), serializerSettings);
-        Debug("PhotonicFreedom: Loaded settings has " + loaded.defaultFieldValues + "\n");
+        Slot UserspaceRoot = Userspace.UserspaceWorld.RootSlot;
         foreach (var field in FieldHolders[type].Fields)
         {
             IFieldValuePair pair = loaded.defaultFieldValues.FirstOrDefault(pair => pair.fieldName == field.Name);
-            if (pair != null && pair.BoxedValue != null)
+            //Debug($"PhotonicFreedom: Found pair -> {pair.fieldName}\n");
+            if (pair != null && pair.BoxedValue != null && field.Name != "active")
             {
-                Debug($"PhotonicFreedom: Found field -> {field.Name} with value {pair.BoxedValue} and a type of {pair.BoxedValue.GetType()}\n");
                 field.SetRealValue(comp, pair.BoxedValue);
+                object? SanitizedValue = pair.BoxedValue.GetType() == typeof(UnityEngine.Color) ? UnityNeos.Conversions.ToNeos((UnityEngine.Color)pair.BoxedValue) : pair.BoxedValue;
+                var DynValue = UserspaceRoot.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
+                if (DynValue == null)
+                    return;
+                
+                DynValue.GetType().GetProperty("LocalValue", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(DynValue, SanitizedValue);
+                
+                IField? DynValueField = DynValue.GetType().GetField("Value").GetValue(DynValue) as IField;
+                IField? DynFieldName = DynValue.GetType().BaseType.GetField("VariableName").GetValue(DynValue) as IField;
+                
+                if (DynValueField == null || DynFieldName == null)
+                    return;
+                
+                DynFieldName.BoxedValue = $"{DynvarKey}_{type.Name}_{field.Name}";
+                if (SanitizedValue.GetType() == typeof(color))
+                {
+                    DynValueField.Changed += (IChangeable c) =>
+                    {
+                        OnPhotonicSettingChanged_Color(c, field, comp);
+                    };
+                }
+                else if (SupportedTypes.Contains(SanitizedValue.GetType()) || SanitizedValue.GetType().IsEnum)
+                {
+                    DynValueField.Changed += (IChangeable c) =>
+                    {
+                        OnPhotonicSettingChanged(c, field, comp);
+                    };
+                }
             }
         }
         foreach (var property in FieldHolders[type].Properties)
         {
             IFieldValuePair pair = loaded.defaultFieldValues.FirstOrDefault(pair => pair.fieldName == property.Name);
-            if (pair != null && pair.BoxedValue != null)
+            if (pair != null && pair.BoxedValue != null && property.Name == "enabled")
             {
-                Debug($"PhotonicFreedom: Found property -> {property.Name} with value {pair.BoxedValue} and a type of {pair.BoxedValue.GetType()}\n");
-                Debug("PhotonicFreedom: Setting property " + property.Name + " to " + pair.BoxedValue + "\n");
                 property.SetRealValue(comp, pair.BoxedValue);
+                object? SanitizedValue = pair.BoxedValue.GetType() == typeof(UnityEngine.Color) ? UnityNeos.Conversions.ToNeos((UnityEngine.Color)pair.BoxedValue) : pair.BoxedValue;
+                var DynValue = UserspaceRoot.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
+                if (DynValue == null)
+                {
+                    return;
+                }
+
+                DynValue.GetType().GetProperty("LocalValue", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(DynValue, SanitizedValue);
+                
+                IField? DynValueField = DynValue.GetType().GetField("Value").GetValue(DynValue) as IField;
+                IField? DynFieldName = DynValue.GetType().BaseType.GetField("VariableName").GetValue(DynValue) as IField;
+                
+                if (DynValueField == null || DynFieldName == null)
+                    return;
+                
+                DynFieldName.BoxedValue = $"{DynvarKey}_{type.Name}_{property.Name}";
+
+                if (SupportedTypes.Contains(SanitizedValue.GetType()))
+                {
+                    DynValueField.Changed += (IChangeable c) =>
+                    {
+                        OnPhotonicSettingChanged(c, property, comp);
+                    };
+                }
             }
         }
     }
@@ -160,7 +211,9 @@ public class PhotonicFreedom : NeosMod
     }
     static void OnPhotonicSettingChanged(IChangeable c, ClassFieldHolder.FieldHolder field, object comp)
     {
+        Debug("PhotonicFreedom: OnPhotonicSettingChanged");
         var realValue = c.GetType().GetProperty("Value").GetValue(c);
+        Debug($"PhotonicFreedom: Changed {field.Name} to {realValue}");
         field.SetRealValue(comp, realValue);
     }
     static void OnPhotonicSettingChanged_Color(IChangeable c, ClassFieldHolder.FieldHolder field, object comp)
@@ -227,15 +280,7 @@ public class PhotonicFreedom : NeosMod
                     var checkbox = builder.Checkbox(property.PrettifiedName, (bool)property.GetValue(comp!), false);
                     builder.NestOut();
                     builder.NestOut();
-                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, property, comp!);
-                    if (SettingFields.ContainsKey(type))
-                    {
-                        SettingFields[type].Add(property.Name, checkbox.State);
-                    }
-                    else
-                    {
-                        SettingFields.Add(type, new Dictionary<string, IField>() { { property.Name, checkbox.State } });
-                    }
+                    checkbox.State.SyncWithVariable($"{DynvarKey}_{type.Name}_{property.Name}");
                 }
             }
             foreach (var field in holder.Fields)
@@ -248,15 +293,7 @@ public class PhotonicFreedom : NeosMod
                     var checkbox = builder.Checkbox(field.PrettifiedName, (bool)field.GetValue(comp!), false);
                     builder.NestOut();
                     builder.NestOut();
-                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
-                    if (SettingFields.ContainsKey(type))
-                    {
-                        SettingFields[type].Add(field.Name, checkbox.State);
-                    }
-                    else
-                    {
-                        SettingFields.Add(type, new Dictionary<string, IField>() { { field.Name, checkbox.State } });
-                    }
+                    checkbox.State.SyncWithVariable($"{DynvarKey}_{type.Name}_{field.Name}");
                 }
             }
             builder.Text("---------------------------------------------", true, null, true, null);
@@ -292,11 +329,12 @@ public class PhotonicFreedom : NeosMod
             {
                 if (field.RealType == typeof(int))
                 {
-                    var parser = builder.HorizontalElementWithLabel<IntTextEditorParser>(field.PrettifiedName, 0.7f, () => builder.IntegerField((int)field.Min, (int)field.Max, 1));
+                    var parser = builder.HorizontalElementWithLabel<IntTextEditorParser>(field.PrettifiedName, 0.7f, () => builder.IntegerField(int.MinValue, int.MaxValue, 1));
                     parser.ParsedValue.Value = (int)field.GetValue(comp!);
-                    parser.ParsedValue.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
+                    parser.ParsedValue.SyncWithVariable($"{DynvarKey}_{type.Name}_{field.Name}");
                     var slider = builder.Slider<int>(builder.Style.MinHeight, 0, (int)field.Min, (int)field.Max, true);
                     slider.Value.DriveFrom(parser.ParsedValue, true);
+                    //parser.ParsedValue.SyncWithVariable($"{DynvarKey}_{field.BaseFieldType.Name}_{field.Name}");
                     if (SettingFields.ContainsKey(type))
                     {
                         SettingFields[type].Add(field.Name, parser.ParsedValue);
@@ -308,11 +346,12 @@ public class PhotonicFreedom : NeosMod
                 }
                 if (field.RealType == typeof(float))
                 {
-                    var parser = builder.HorizontalElementWithLabel<FloatTextEditorParser>(field.PrettifiedName, 0.7f, () => builder.FloatField(field.Min, field.Max));
+                    var parser = builder.HorizontalElementWithLabel<FloatTextEditorParser>(field.PrettifiedName, 0.7f, () => builder.FloatField(float.MinValue, float.MaxValue));
                     parser.ParsedValue.Value = (float)field.GetValue(comp!);
-                    parser.ParsedValue.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
+                    parser.ParsedValue.SyncWithVariable($"{DynvarKey}_{type.Name}_{field.Name}");
                     var slider = builder.Slider<float>(builder.Style.MinHeight, 0, field.Min, field.Max, false);
                     slider.Value.DriveFrom(parser.ParsedValue, true);
+                    //parser.ParsedValue.SyncWithVariable($"{DynvarKey}_{field.BaseFieldType.Name}_{field.Name}");
                     if (SettingFields.ContainsKey(type))
                     {
                         SettingFields[type].Add(field.Name, parser.ParsedValue);
@@ -325,7 +364,8 @@ public class PhotonicFreedom : NeosMod
                 if (field.RealType == typeof(bool) && field.Name != "active" && field.Name != "enabled")
                 {
                     var checkbox = builder.Checkbox(field.PrettifiedName, (bool)field.GetValue(comp!));
-                    checkbox.State.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
+                    checkbox.State.SyncWithVariable($"{DynvarKey}_{type.Name}_{field.Name}");
+                    //checkbox.State.SyncWithVariable($"{DynvarKey}_{field.BaseFieldType.Name}_{field.Name}");
                     if (SettingFields.ContainsKey(type))
                     {
                         SettingFields[type].Add(field.Name, checkbox.State);
@@ -347,7 +387,7 @@ public class PhotonicFreedom : NeosMod
                     }
                     EnumMemberEditor enumParser = builder.HorizontalElementWithLabel<EnumMemberEditor>(field.PrettifiedName, 0.7f, () => builder.EnumMemberEditor(valField));
                     valField.BoxedValue = field.GetValue(comp!);
-                    valField.Changed += (IChangeable c) => OnPhotonicSettingChanged(c, field, comp!);
+                    typeof(DynamicFieldExtensions).GetMethod("SyncWithVariable").MakeGenericMethod(field.RealType).Invoke(null, new object?[] { valField, $"{DynvarKey}_{type.Name}_{field.Name}", false, false });
                     if (SettingFields.ContainsKey(type))
                     {
                         SettingFields[type].Add(field.Name, valField);
@@ -365,7 +405,7 @@ public class PhotonicFreedom : NeosMod
                         SyncMemberEditorBuilder.Build(val.Value, "", val.GetSyncMemberFieldInfo(val.IndexOfMember(val.GetSyncMember("Value"))), builder);
                         return val;
                     });
-                    val.Value.Changed += (IChangeable c) => OnPhotonicSettingChanged_Color(c, field, comp!);
+                    val.Value.SyncWithVariable($"{DynvarKey}_{type.Name}_{field.Name}");
                     if (SettingFields.ContainsKey(type))
                     {
                         SettingFields[type].Add(field.Name, val.Value);
