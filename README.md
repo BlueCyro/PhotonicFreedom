@@ -1,32 +1,30 @@
 # Photonic Freedom
 
-<b>This is a [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod that lets you change your graphical settings in Neos.</b>
-
+This is a [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod that lets you change your graphical settings in Neos.
 
 # DISCLAIMER:
-<b><i>This mod lets you change the intended look of neos. Some worlds are built with neos' defaults in mind so if things look bad - it's YOUR fault!</b></i>
+***This mod lets you change the intended look of neos. Some worlds are built with neos' defaults in mind so if things look bad - it's YOUR fault!***
 
 # Settings you can change:
 
-- <b>Ambient occlusion (Both built-in and from [AmplifyCreations](https://github.com/AmplifyCreations/AmplifyOcclusion) - the latter is in neos by default too)</b>
-- <b>Auto Exposure</b>
-- <b>Bloom</b>
-- <b>Chromatic Aberration</b>
-- <b>Color Grading</b>
-- <b>Depth of Field</b>
-- <b>Grain</b>
-- <b>Lens Distortion</b>
-- <b>Motion Blur</b>
-- <b>Screen-Space Reflections</b>
-- <b>Vignette</b>
+- **Ambient occlusion (Both built-in and from [AmplifyCreations](https://github.com/AmplifyCreations/AmplifyOcclusion))** - the latter is in neos by default too
+- Auto Exposure
+- Bloom
+- Chromatic Aberration
+- Color Grading
+- Depth of Field
+- Grain
+- Lens Distortion
+- Motion Blur
+- Screen-Space Reflections
+- Vignette
 
 
-<b>Most fields on these settings are exposed (barring curve and reference types), and are saved to config files within `nml_mods/Photonic_Settings`</b>
+Most fields on these settings are exposed (barring curve and reference types), and are saved to config files within `nml_mods/Photonic_Settings`
 
-<b>You can find the in-game settings in your regular settings menu on the right side, simply scroll down to see the extra options.</b>
+You can find the in-game settings in your regular settings menu on the right side, simply scroll down to see the extra options.
 
-
-# Examples:
+# Examples
 
 ![2022-04-28 04 57 16](https://user-images.githubusercontent.com/9770110/166115124-1d5d00b4-5622-487d-83e9-44bb2cdd6e35.jpg)
 
@@ -36,12 +34,12 @@
 
 # Known Issues:
 
-- <b>Some effects don't work in VR - you should stick to mostly color grading, bloom and AO effects for VR unless you wanna feel like you're swimming in a fishbowl or have vaseline in your eye</b>
+- **Some effects don't work in VR** - you should stick to mostly color grading, bloom and AO effects for VR unless you wanna feel like you're swimming in a fishbowl or have vaseline in your eye
 
 Enjoy!
 
-<b>--------------------------------------------------------------------</b>
+___
 
-<b>P.S. Presets will be added in the future</b>
+P.S. Presets will be added in the future
 
-<sub><sub>Related functionalities and features potentially coming to cameras near you</sub></sub>
+Related functionalities and features potentially coming to cameras near you
