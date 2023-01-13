@@ -32,6 +32,12 @@ public class PhotonicFreedom : NeosMod
     private static JsonSerializerSettings? serializerSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Include, ReferenceLoopHandling = ReferenceLoopHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto };
     public static void Bootstrap()
     {
+        Slot UserspacePhotonicFreedom = Userspace.UserspaceWorld.RootSlot.Find("PhotonicFreedom");
+        if (UserspacePhotonicFreedom != null)
+        {
+            UserspacePhotonicFreedom.Destroy();
+        }
+        Userspace.UserspaceWorld.RootSlot.AddSlot("PhotonicFreedom", false);
         UnityEngine.Camera mainCam = UnityEngine.Camera.main;
         PostProcessLayer layer = mainCam.GetComponent<PostProcessLayer>();
         if(layer == null)
@@ -128,7 +134,7 @@ public class PhotonicFreedom : NeosMod
     public static void ReadAllSettings(Type type, object comp)
     {
         ClassSerializer loaded = JsonConvert.DeserializeObject<ClassSerializer>(File.ReadAllText($"nml_mods/Photonic_Settings/{type.Name}.json"), serializerSettings);
-        Slot UserspaceRoot = Userspace.UserspaceWorld.RootSlot;
+        Slot UserspacePhotonicFreedom = Userspace.UserspaceWorld.RootSlot.Find("PhotonicFreedom");
         foreach (var field in FieldHolders[type].Fields)
         {
             IFieldValuePair pair = loaded.defaultFieldValues.FirstOrDefault(pair => pair.fieldName == field.Name);
@@ -137,7 +143,7 @@ public class PhotonicFreedom : NeosMod
             {
                 field.SetRealValue(comp, pair.BoxedValue);
                 object? SanitizedValue = pair.BoxedValue.GetType() == typeof(UnityEngine.Color) ? UnityNeos.Conversions.ToNeos((UnityEngine.Color)pair.BoxedValue) : pair.BoxedValue;
-                var DynValue = UserspaceRoot.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
+                var DynValue = UserspacePhotonicFreedom.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
                 if (DynValue == null)
                     return;
                 
@@ -173,7 +179,7 @@ public class PhotonicFreedom : NeosMod
             {
                 property.SetRealValue(comp, pair.BoxedValue);
                 object? SanitizedValue = pair.BoxedValue.GetType() == typeof(UnityEngine.Color) ? UnityNeos.Conversions.ToNeos((UnityEngine.Color)pair.BoxedValue) : pair.BoxedValue;
-                var DynValue = UserspaceRoot.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
+                var DynValue = UserspacePhotonicFreedom.AttachComponent(typeof(DynamicValueVariable<>).MakeGenericType(SanitizedValue.GetType()));
                 if (DynValue == null)
                 {
                     return;
@@ -451,11 +457,13 @@ public class PhotonicFreedom : NeosMod
     [HarmonyPatch]
     public static class Userspace_Patch
     {
+        private static bool OutputDeviceChanged = false;
+        private static UnityEngine.Camera? mainCam;
         [HarmonyPatch(typeof(Userspace), "SaveAllSettings")]
         [HarmonyPrefix]
         public static void SaveAllSettings_Prefix(Userspace __instance)
         {
-            UnityEngine.Camera mainCam = UnityEngine.Camera.main;
+            mainCam = UnityEngine.Camera.main;
             if (mainCam == null)
             {
                 return;
@@ -472,11 +480,32 @@ public class PhotonicFreedom : NeosMod
                 WriteCurrentSettings(type, comp);
             });
         }
+        public static void VRActiveChangedEvent(bool a)
+        {
+            OutputDeviceChanged = true;
+        }       
         [HarmonyPatch(typeof(Userspace), "OnAttach")]
         [HarmonyPostfix]
         public static void OnAttach_Postfix(Userspace __instance)
         {
+            mainCam = UnityEngine.Camera.main;
             Bootstrap();
+            __instance.InputInterface.VRActiveChanged += VRActiveChangedEvent;
+        }
+        [HarmonyPatch(typeof(ScreenModeController), "OnCommonUpdate")]
+        [HarmonyPostfix]
+        public static void OnCommonUpdate_Postfix(ScreenModeController __instance)
+        {
+            if (OutputDeviceChanged == true)
+            {
+                Msg("Waiting for changed camera");
+                if (mainCam != UnityEngine.Camera.main && UnityEngine.Camera.main != null)
+                {
+                    Msg("Resetting Camera");
+                    OutputDeviceChanged = false;
+                    Bootstrap();
+                }
+            }
         }
     }
 }
