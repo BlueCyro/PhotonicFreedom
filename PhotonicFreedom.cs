@@ -502,6 +502,7 @@ public class PhotonicFreedom : NeosMod
                 if (mainCam != UnityEngine.Camera.main && UnityEngine.Camera.main != null)
                 {
                     Msg("Resetting Camera");
+                    mainCam = UnityEngine.Camera.main;
                     OutputDeviceChanged = false;
                     Bootstrap();
                 }
