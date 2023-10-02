@@ -15,7 +15,7 @@
         <CopyToMods Condition="'$(CopyToMods)'==''">true</CopyToMods>
         <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
         <DebugType Condition="'$(Configuration)'=='Release'">None</DebugType>
-        <Version>2.2.0</Version>
+        <Version>2.2.1</Version>
         <Authors>Cyro, TheJebForge</Authors>
         <PackageId>PhotonicFreedom</PackageId>
         <LangVersion>10</LangVersion>
@@ -67,16 +67,13 @@
         </Reference>
     </ItemGroup>
 
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
     <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToMods)'=='true'">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ResonitePath)rml_mods" />
         <Message Text="Copied $(TargetFileName) to $(ResonitePath)rml_mods" Importance="high" />
     </Target>
-
-
-    <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="System.Net.Http" Version="4.3.4"/>
-        <PackageReference Include="System.Text.Json" Version="6.0.3"/>
-    </ItemGroup>
-
 </Project>

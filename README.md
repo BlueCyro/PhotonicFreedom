@@ -8,6 +8,13 @@ Resonite.
 ***This mod lets you change the intended look of Resonite. Some worlds are built with Resonite's defaults in mind so if things
 look bad - it's YOUR fault!***
 
+## Bug with starting in "hybrid mode"
+If you're starting Resonite in such a way where it first tries to load in VR but then goes into Desktop,
+the camera will bug out and you won't be able to change any post processing settings. 
+
+Keep the headset sensor engaged until you load into a world, this will prevent that from happening. 
+Literally have no idea why it's happening...
+
 # Settings you can change:
 
 - **Ambient occlusion (Both built-in and from [AmplifyCreations](https://github.com/AmplifyCreations/AmplifyOcclusion))

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using AmplifyOcclusion;
 using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.UIX;
@@ -32,7 +31,7 @@ public class PhotonicFreedom : ResoniteMod
 
     public override string Author => "Cyro, TheJebForge";
     public override string Name => "PhotonicFreedom";
-    public override string Version => "2.2.0";
+    public override string Version => "2.2.1";
     private static string DynvarKey => "World/PhotonicFreedomPostProcessOption";
 
     private static List<Type> Types { get; } = new() { typeof(AmplifyOcclusionBase) };
