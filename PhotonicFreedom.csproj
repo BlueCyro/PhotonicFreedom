@@ -1,53 +1,82 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net4.7.2</TargetFramework>
-    <RootNamespace>PhotonicFreedom</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
-    <AssemblyName>PhotonicFreedom</AssemblyName>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+        <RootNamespace>PhotonicFreedom</RootNamespace>
+        <Nullable>enable</Nullable>
+        <FileAlignment>512</FileAlignment>
+        <Deterministic>true</Deterministic>
+        <ResonitePath>$(MSBuildThisFileDirectory)Resonite</ResonitePath>
+        <ResonitePath Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\Resonite\')">C:\Program Files (x86)\Steam\steamapps\common\Resonite\</ResonitePath>
+        <ResonitePath Condition="Exists('$(HOME)/.steam/steam/steamapps/common/Resonite/')">$(HOME)/.steam/steam/steamapps/common/Resonite/</ResonitePath>
+        <ResonitePath Condition="Exists('D:/SteamLibrary/steamapps/common/Resonite/')">D:/SteamLibrary/steamapps/common/Resonite/</ResonitePath>
+        <ResonitePath Condition="Exists('E:/SteamLibrary/steamapps/common/Resonite/')">E:/SteamLibrary/steamapps/common/Resonite/</ResonitePath>
+        <CopyLocal>false</CopyLocal>
+        <CopyToMods Condition="'$(CopyToMods)'==''">true</CopyToMods>
+        <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
+        <DebugType Condition="'$(Configuration)'=='Release'">None</DebugType>
+        <Version>2.2.0</Version>
+        <Authors>Cyro, TheJebForge</Authors>
+        <PackageId>PhotonicFreedom</PackageId>
+        <LangVersion>10</LangVersion>
+    </PropertyGroup>
 
 
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>SymlinkedLibraries\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="BaseX">
-      <HintPath>SymlinkedLibraries\BaseX.dll</HintPath>
-    </Reference>
-    <Reference Include="CodeX">
-      <HintPath>SymlinkedLibraries\CodeX.dll</HintPath>
-    </Reference>
-    <Reference Include="FrooxEngine">
-      <HintPath>SymlinkedLibraries\FrooxEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="NeosModLoader">
-      <HintPath>SymlinkedLibraries\NeosModLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>SymlinkedLibraries\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>SymlinkedLibraries\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.PostProcessing.Runtime">
-      <HintPath>SymlinkedLibraries\Unity.PostProcessing.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.Rendering">
-      <HintPath>SymlinkedLibraries\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityNeos">
-      <HintPath>SymlinkedLibraries\UnityNeos.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+    <ItemGroup>
+        <Reference Include="0Harmony">
+            <HintPath>$(ResonitePath)rml_libs/0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="FrooxEngine">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/FrooxEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="BaseX">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/Elements.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="CodeX">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/Elements.Assets.dll</HintPath>
+        </Reference>
+        <Reference Include="ResoniteModLoader">
+            <HintPath>$(ResonitePath)Libraries/ResoniteModLoader.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.PostProcessing.Runtime">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/Unity.PostProcessing.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.Rendering">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityFrooxEngineRunner">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/UnityFrooxEngineRunner.dll</HintPath>
+        </Reference>
+        <Reference Include="AssimpNet">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/AssimpNet.dll</HintPath>
+        </Reference>
+        <Reference Include="BepuUtilities">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/BepuUtilities.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ParticleSystemModule">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/UnityEngine.ParticleSystemModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AudioModule">
+            <HintPath>$(ResonitePath)Resonite_Data/Managed/UnityEngine.AudioModule.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToMods)'=='true'">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ResonitePath)rml_mods" />
+        <Message Text="Copied $(TargetFileName) to $(ResonitePath)rml_mods" Importance="high" />
+    </Target>
 
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Text.Json" Version="6.0.3" />
-  </ItemGroup>
-  
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="System.Net.Http" Version="4.3.4"/>
+        <PackageReference Include="System.Text.Json" Version="6.0.3"/>
+    </ItemGroup>
+
 </Project>

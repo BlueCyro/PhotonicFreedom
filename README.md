@@ -1,13 +1,17 @@
 # Photonic Freedom
 
-This is a [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod that lets you change your graphical settings in Neos.
+This is a [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod that lets you change your graphical settings in
+Resonite.
 
 # DISCLAIMER:
-***This mod lets you change the intended look of neos. Some worlds are built with neos' defaults in mind so if things look bad - it's YOUR fault!***
+
+***This mod lets you change the intended look of Resonite. Some worlds are built with Resonite's defaults in mind so if things
+look bad - it's YOUR fault!***
 
 # Settings you can change:
 
-- **Ambient occlusion (Both built-in and from [AmplifyCreations](https://github.com/AmplifyCreations/AmplifyOcclusion))** - the latter is in neos by default too
+- **Ambient occlusion (Both built-in and from [AmplifyCreations](https://github.com/AmplifyCreations/AmplifyOcclusion))
+  ** - the latter is in Resonite by default too
 - Auto Exposure
 - Bloom
 - Chromatic Aberration
@@ -19,10 +23,11 @@ This is a [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod that lets y
 - Screen-Space Reflections
 - Vignette
 
+Most fields on these settings are exposed (barring curve and reference types), and are saved to config files
+within `rml_mods/Photonic_Settings`
 
-Most fields on these settings are exposed (barring curve and reference types), and are saved to config files within `nml_mods/Photonic_Settings`
-
-You can find the in-game settings in your regular settings menu on the right side, simply scroll down to see the extra options.
+You can find the in-game settings in your regular settings menu on the right side, simply scroll down to see the extra
+options.
 
 # Examples
 
@@ -34,7 +39,8 @@ You can find the in-game settings in your regular settings menu on the right sid
 
 # Known Issues:
 
-- **Some effects don't work in VR** - you should stick to mostly color grading, bloom and AO effects for VR unless you wanna feel like you're swimming in a fishbowl or have vaseline in your eye
+- **Some effects don't work in VR** - you should stick to mostly color grading, bloom and AO effects for VR unless you
+  wanna feel like you're swimming in a fishbowl or have vaseline in your eye
 
 Enjoy!
 
